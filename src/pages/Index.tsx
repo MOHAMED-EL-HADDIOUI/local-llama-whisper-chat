@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SessionSidebar } from '../components/SessionSidebar';
 import { ChatInterface } from '../components/ChatInterface';
 import { useChat } from '../hooks/useChat';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useUser } from '../hooks/useUser';
+import { useToast } from '@/hooks/use-toast';
 import { Menu, ChevronLeft } from 'lucide-react';
 
-const Index = () => {
+const Index: React.FC = () => {
   const {
     sessions,
     currentSessionId,
     createSession,
     switchSession,
     deleteSession,
+    selectModel,
   } = useChat();
 
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const { user } = useUser();
+  const { toast } = useToast();
 
   // Sidebar state (hidden by default on mobile)
   const [showSidebar, setShowSidebar] = useState(window.innerWidth >= 768);
@@ -33,9 +36,52 @@ const Index = () => {
 
   // Wrapper to close sidebar on mobile when switching session
   const handleSwitchSession = (sessionId: string) => {
+    const targetSession = sessions.find(s => s.id === sessionId);
     switchSession(sessionId);
+    
+    if (targetSession) {
+      toast({
+        title: "Conversation Switched",
+        description: `Switched to "${targetSession.title}"`,
+      });
+    }
+    
     if (window.innerWidth < 768) setShowSidebar(false);
   };
+
+  // Wrapper to handle new session creation
+  const handleCreateSession = () => {
+    const newSessionId = createSession();
+    toast({
+      title: "New Chat Created",
+      description: "A new chat session has been created successfully.",
+    });
+    // Close sidebar on mobile after creating new session
+    if (window.innerWidth < 768) setShowSidebar(false);
+  };
+
+  // Wrapper to handle model selection
+  const handleSelectModel = (modelName: string) => {
+    selectModel(modelName);
+    toast({
+      title: "Model Selected",
+      description: `Switched to ${modelName} model.`,
+    });
+  };
+
+  // Monitor for automatic session creation
+  React.useEffect(() => {
+    if (sessions.length > 0 && currentSessionId) {
+      const currentSession = sessions.find(s => s.id === currentSessionId);
+      if (currentSession && currentSession.messages.length === 1 && currentSession.messages[0].role === 'user') {
+        // This is likely an auto-created session with just one user message
+        toast({
+          title: "Chat Session Created",
+          description: "A new chat session was automatically created for your message.",
+        });
+      }
+    }
+  }, [sessions, currentSessionId, toast]);
 
   return (
     <div className="h-screen flex bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-300">
@@ -66,18 +112,20 @@ const Index = () => {
           </button>
         </div>
         <SessionSidebar
-          sessions={sessions}
           currentSessionId={currentSessionId}
-          onCreateSession={createSession}
-          onSwitchSession={handleSwitchSession}
-          onDeleteSession={deleteSession}
+          onSessionSelect={handleSwitchSession}
           isDarkMode={isDarkMode}
           onToggleDarkMode={toggleDarkMode}
         />
       </div>
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 shadow-inner min-h-0">
-        <ChatInterface currentSessionId={currentSessionId} />
+        <ChatInterface 
+          currentSessionId={currentSessionId} 
+          onSelectModel={handleSelectModel}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={toggleDarkMode}
+        />
       </div>
     </div>
   );

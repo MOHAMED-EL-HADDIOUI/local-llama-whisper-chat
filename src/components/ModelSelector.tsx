@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { ChevronDown, Cpu } from 'lucide-react';
+import { ChevronDown, Cpu, AlertCircle } from 'lucide-react';
 import { OllamaModel } from '../types/chat';
 import {
   Select,
@@ -28,6 +27,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     return `${gb.toFixed(1)}GB`;
   };
 
+  const handleModelSelect = (modelName: string) => {
+    console.log('Selecting model:', modelName);
+    onSelectModel(modelName);
+  };
+
   return (
     <div className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="flex items-center gap-3">
@@ -52,32 +56,45 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
           
           <Select
             value={selectedModel || ''}
-            onValueChange={onSelectModel}
-            disabled={isLoading || models.length === 0}
+            onValueChange={handleModelSelect}
+            disabled={isLoading}
           >
             <SelectTrigger className="w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
               <SelectValue 
-                placeholder={isLoading ? 'Loading models...' : 'Select a model'} 
+                placeholder={
+                  isLoading 
+                    ? 'Loading models...' 
+                    : models.length === 0 
+                    ? 'No models available' 
+                    : 'Select a model'
+                } 
               />
             </SelectTrigger>
             <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-xl">
-              {models.map((model) => (
-                <SelectItem 
-                  key={model.name} 
-                  value={model.name}
-                  className="text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                >
-                  <div className="flex items-center justify-between w-full py-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium">{model.name}</span>
+              {models.length === 0 ? (
+                <div className="flex items-center gap-2 p-2 text-gray-500 dark:text-gray-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">No models found</span>
+                </div>
+              ) : (
+                models.map((model) => (
+                  <SelectItem 
+                    key={model.name} 
+                    value={model.name}
+                    className="text-gray-900 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  >
+                    <div className="flex items-center justify-between w-full py-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="font-medium">{model.name}</span>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                        {formatModelSize(model.size)}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                      {formatModelSize(model.size)}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>

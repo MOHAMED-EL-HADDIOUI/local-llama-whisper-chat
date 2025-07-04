@@ -1,4 +1,3 @@
-
 import { OllamaModel } from '../types/chat';
 
 class ChatService {
@@ -8,7 +7,7 @@ class ChatService {
     try {
       const response = await fetch(`${this.baseUrl}/api/tags`);
       if (!response.ok) {
-        throw new Error('Failed to fetch models from Ollama');
+        throw new Error(`Failed to fetch models from Ollama: ${response.status}`);
       }
       const data = await response.json();
       return data.models || [];
@@ -38,7 +37,7 @@ class ChatService {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from Ollama');
+        throw new Error(`Failed to get response from Ollama: ${response.status}`);
       }
 
       const data = await response.json();
@@ -46,7 +45,7 @@ class ChatService {
     } catch (error) {
       console.error('Error sending message:', error);
       // Return mock response for development
-      return `Mock response from ${model}: I received your message "${message}". This is a simulated response since Ollama is not available.`;
+      return `Mock response from ${model}: I received your message "${message}". This is a simulated response since Ollama is not available. Please make sure Ollama is running on localhost:11434.`;
     }
   }
 }

@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    environment:
+      - VITE_OLLAMA_URL=http://ollama:11434
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+volumes:
+  ollama_data: 
